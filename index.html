@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <!-- Seuls les fichiers de ce dépôt peuvent s'exécuter ; seul le serveur de mise en relation est joignable. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
+  <title>Murmure — messagerie chiffrée</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <h1>Murmure</h1>
+    </div>
+    <span id="status" class="status" data-state="wait">Démarrage…</span>
+  </header>
+
+  <main>
+    <!-- Accueil -->
+    <section id="lobby" class="card">
+      <h2>Votre lien d'invitation</h2>
+      <p class="hint">Envoyez-le à votre contact. Il doit l'ouvrir pendant que cette page est ouverte chez vous.</p>
+      <div class="row">
+        <input id="my-link" type="text" readonly aria-label="Votre lien d'invitation" placeholder="Création du lien…">
+        <button id="copy" type="button" disabled>Copier</button>
+      </div>
+
+      <h2>Rejoindre un contact</h2>
+      <form id="join" class="row">
+        <input id="peer-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+               aria-label="Lien ou identifiant du contact" placeholder="Collez son lien ici">
+        <button type="submit" id="join-button" class="primary" disabled>Se connecter</button>
+      </form>
+
+      <p id="notice" class="notice" role="alert" hidden></p>
+
+      <details>
+        <summary>Comment ça marche</summary>
+        <ul>
+          <li>Les messages sont chiffrés sur votre appareil et déchiffrés uniquement sur celui de votre contact.</li>
+          <li>Ils circulent directement d'un navigateur à l'autre ; rien n'est stocké sur un serveur.</li>
+          <li>L'historique disparaît à la fermeture de la conversation.</li>
+          <li>Comparez le <strong>code de sécurité</strong> avec votre contact pour être sûr que personne n'intercepte.</li>
+        </ul>
+        <button id="reset" type="button" class="link">Réinitialiser mon identité (nouveau lien, nouvelles clés)</button>
+      </details>
+    </section>
+
+    <!-- Connexion en cours -->
+    <section id="connecting" class="card center" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Connexion sécurisée en cours…</p>
+      <button id="cancel" type="button">Annuler</button>
+    </section>
+
+    <!-- Conversation -->
+    <section id="chat" hidden>
+      <div id="safety" class="safety" data-verified="false">
+        <div>
+          <span id="safety-label" class="safety-label">Code de sécurité — non vérifié</span>
+          <code id="safety-code"></code>
+          <p id="safety-help" class="hint">Lisez ce code à votre contact par téléphone ou en personne. S'il est identique chez lui, la conversation n'est pas interceptée.</p>
+        </div>
+        <div class="safety-actions">
+          <button id="verify" type="button">Codes identiques</button>
+          <button id="leave" type="button">Quitter</button>
+        </div>
+      </div>
+
+      <div id="log" class="log" role="log" aria-live="polite" tabindex="0"></div>
+
+      <form id="composer" class="composer">
+        <textarea id="text" rows="1" maxlength="4000" aria-label="Votre message" placeholder="Écrire un message…"></textarea>
+        <button type="submit" class="primary">Envoyer</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="vendor/peerjs.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
