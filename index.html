@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <!-- Seuls les fichiers de ce dépôt peuvent s'exécuter ; seul le serveur de mise en relation est joignable. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
   <title>Murmure — messagerie chiffrée</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -42,6 +42,7 @@
         <ul>
           <li>Les messages sont chiffrés sur votre appareil et déchiffrés uniquement sur celui de votre contact.</li>
           <li>Ils circulent directement d'un navigateur à l'autre ; rien n'est stocké sur un serveur.</li>
+          <li>Les photos sont chiffrées de la même façon. Elles sont réduites avant l'envoi et leurs métadonnées (lieu, appareil, date) sont retirées.</li>
           <li>L'historique disparaît à la fermeture de la conversation.</li>
           <li>Comparez le <strong>code de sécurité</strong> avec votre contact pour être sûr que personne n'intercepte.</li>
         </ul>
@@ -73,7 +74,9 @@
       <div id="log" class="log" role="log" aria-live="polite" tabindex="0"></div>
 
       <form id="composer" class="composer">
-        <textarea id="text" rows="1" maxlength="4000" aria-label="Votre message" placeholder="Écrire un message…"></textarea>
+        <button type="button" id="photo" aria-label="Envoyer une photo">Photo</button>
+        <input id="photo-input" type="file" accept="image/*" hidden>
+        <textarea id="text" rows="1" maxlength="4000" aria-label="Votre message" placeholder="Message…"></textarea>
         <button type="submit" class="primary">Envoyer</button>
       </form>
     </section>

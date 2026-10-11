@@ -208,3 +208,12 @@ details ul { padding-left: 20px; margin: 10px 0; }
   .row input { flex-basis: 100%; }
   .row button { flex: 1; }
 }
+
+/* Photos */
+.msg.photo { padding: 4px; }
+.msg.photo a { display: block; }
+.msg.photo img { display: block; max-width: 100%; max-height: 320px; border-radius: 12px; }
+.msg.photo time { padding: 0 8px 2px; }
+.msg.sending { opacity: 0.6; }
+.msg.pending { font-style: italic; color: var(--muted); }
+#chat.dropping .log { outline: 2px dashed var(--accent); outline-offset: -6px; }

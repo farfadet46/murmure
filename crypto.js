@@ -1,18 +1,19 @@
 // Murmure — chiffrement de bout en bout (API WebCrypto du navigateur, aucune dépendance).
 //
-// Protocole, version 1 :
+// Protocole, version 2 :
 //   • Identité      : paire de clés ECDSA P-256, créée une fois et conservée dans le navigateur.
 //   • Par session   : paire de clés ECDH P-256 éphémère, signée par la clé d'identité.
 //   • Clés de session : ECDH -> HKDF-SHA-256 -> deux clés AES-256-GCM (une par sens).
-//   • Messages      : AES-256-GCM, compteur strictement croissant (anti-rejeu).
+//   • Trames        : AES-256-GCM, compteur strictement croissant (anti-rejeu).
+//                     Texte et photos sont découpés en trames par app.js.
 //   • Code de sécurité : empreinte des deux clés d'identité, à comparer entre contacts.
 
-const PROTO = 'murmure-v1';
+const PROTO = 'murmure-v2';
+const VERSION = 2;
 const POINT_LENGTH = 65; // point P-256 non compressé
 const MAX_CIPHERTEXT_B64 = 64 * 1024;
 
 const te = new TextEncoder();
-const td = new TextDecoder('utf-8', { fatal: true });
 const subtle = globalThis.crypto.subtle;
 
 export function toB64(bytes) {
@@ -75,13 +76,15 @@ export async function createOffer(identity) {
     ephPrivate: eph.privateKey,
     idPub,
     ephPub,
-    hello: { t: 'hello', v: 1, id: toB64(idPub), eph: toB64(ephPub), sig: toB64(sig) },
+    hello: { t: 'hello', v: VERSION, id: toB64(idPub), eph: toB64(ephPub), sig: toB64(sig) },
   };
 }
 
 /** Termine l'échange à partir du « hello » reçu et renvoie la session chiffrée. */
 export async function completeSession(offer, hello) {
-  if (!hello || hello.v !== 1) throw new Error('version de protocole inconnue');
+  if (!hello || hello.v !== VERSION) {
+    throw Object.assign(new Error('version de protocole différente'), { code: 'version' });
+  }
   const theirId = fromB64(hello.id);
   const theirEph = fromB64(hello.eph);
   const theirSig = fromB64(hello.sig);
@@ -152,17 +155,19 @@ class Session {
     this.peerFingerprint = peerFingerprint;
   }
 
-  async encrypt(text) {
+  /** Chiffre une trame (Uint8Array). */
+  async encrypt(bytes) {
     const n = ++this.#sent; // réservé avant tout « await » : jamais deux fois le même compteur
-    const ct = await subtle.encrypt({ name: 'AES-GCM', iv: nonce(n), additionalData: AAD }, this.#sendKey, te.encode(text));
+    const ct = await subtle.encrypt({ name: 'AES-GCM', iv: nonce(n), additionalData: AAD }, this.#sendKey, bytes);
     return { t: 'msg', n, c: toB64(new Uint8Array(ct)) };
   }
 
+  /** Déchiffre une trame et renvoie ses octets. */
   async decrypt(msg) {
     if (!Number.isSafeInteger(msg.n) || msg.n <= this.#received) throw new Error('message rejoué ou désordonné');
     if (typeof msg.c !== 'string' || msg.c.length > MAX_CIPHERTEXT_B64) throw new Error('message mal formé');
     const pt = await subtle.decrypt({ name: 'AES-GCM', iv: nonce(msg.n), additionalData: AAD }, this.#receiveKey, fromB64(msg.c));
     this.#received = msg.n;
-    return td.decode(pt);
+    return new Uint8Array(pt);
   }
 }

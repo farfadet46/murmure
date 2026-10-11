@@ -2,7 +2,7 @@
 
 Messagerie chiffrée de bout en bout qui tient dans une page web statique. Pas de compte, pas de numéro de téléphone, pas de serveur à administrer : elle s'héberge gratuitement sur GitHub Pages.
 
-- Les messages sont chiffrés dans le navigateur de l'expéditeur et déchiffrés dans celui du destinataire.
+- Les messages et les photos sont chiffrés dans le navigateur de l'expéditeur et déchiffrés dans celui du destinataire.
 - Ils circulent directement d'un navigateur à l'autre (WebRTC).
 - Rien n'est enregistré : l'historique disparaît à la fermeture de la conversation.
 
@@ -20,8 +20,17 @@ Pour un essai sur votre ordinateur : `python3 -m http.server` dans ce dossier, p
 1. Ouvrez la page et copiez **votre lien d'invitation**.
 2. Envoyez-le à votre contact. Il l'ouvre pendant que la page est ouverte chez vous : la conversation démarre.
 3. Comparez le **code de sécurité** affiché en haut (30 chiffres) par un autre moyen : appel vocal, en personne. S'il est identique des deux côtés, cliquez sur « Codes identiques ». Le contact sera reconnu automatiquement les fois suivantes.
+4. Pour envoyer une photo : bouton **Photo**, ou collez / glissez une image dans la conversation. Elle est réduite (1600 pixels au plus) et réencodée avant l'envoi, ce qui retire ses métadonnées (position GPS, modèle d'appareil, date).
 
 Votre lien reste le même d'une visite à l'autre dans le même navigateur. « Réinitialiser mon identité » en crée un nouveau.
+
+## Dépannage
+
+- **« Les connexions directes (WebRTC) sont désactivées »** : Murmure ne peut pas fonctionner sans WebRTC. Dans Firefox, ouvrez `about:config` et passez `media.peerconnection.enabled` à `true`. Ce réglage est coupé par défaut dans LibreWolf, Mullvad Browser, Tor Browser et les profils Firefox « durcis » ; certaines extensions de confidentialité le coupent aussi.
+- **« Le fichier vendor/peerjs.min.js n'a pas été chargé »** : le dossier `vendor/` manque dans le dépôt. L'adresse `https://VOTRE-NOM.github.io/NOM-DU-DEPOT/vendor/peerjs.min.js` doit afficher du code.
+- **« Photo non envoyée : ce navigateur bloque la préparation des images »** : la protection anti-pistage du canvas est active (Firefox avec `privacy.resistFingerprinting`, LibreWolf, Tor Browser). Autorisez le canvas pour ce site : Firefox affiche une icône d'autorisation dans la barre d'adresse.
+- **« Votre contact utilise une autre version de Murmure »** : après une mise à jour du dépôt, les deux personnes doivent recharger la page.
+- **« Ce contact n'est pas en ligne »** : les deux personnes doivent avoir la page ouverte au même moment.
 
 ## Ce que l'outil protège, et ses limites
 
@@ -36,9 +45,9 @@ Votre lien reste le même d'une visite à l'autre dans le même navigateur. « R
 
 - **Ce n'est pas Signal.** Le code n'a pas fait l'objet d'un audit de sécurité indépendant. Pour un usage où une fuite aurait des conséquences graves, utilisez un outil audité.
 - Les deux personnes doivent être en ligne en même temps. Pas de messages en attente, pas de notifications quand la page est fermée.
-- Conversations à deux uniquement, une à la fois. Texte seulement.
+- Conversations à deux uniquement, une à la fois. Texte et photos ; pas de vidéos ni d'autres fichiers. Les photos arrivent en JPEG réduit, pas dans leur qualité d'origine (les GIF animés deviennent une image fixe).
 - Les métadonnées ne sont pas cachées : le service de mise en relation (`0.peerjs.com`, serveur public du projet PeerJS) voit les identifiants et les adresses IP au moment de la connexion, et votre contact voit votre adresse IP. Derrière certains pare-feu, la connexion passe par un relais, qui ne voit que des données chiffrées.
-- La taille approximative des messages est visible sur le réseau.
+- La taille approximative des messages et des photos est visible sur le réseau.
 - Vous faites confiance au code servi par votre dépôt : quiconque peut le modifier peut modifier l'application. Protégez votre compte GitHub (double authentification).
 - La clé d'identité est stockée dans le navigateur (non exportable). Une personne ayant accès à votre session sur l'appareil peut utiliser Murmure à votre place.
 
@@ -49,7 +58,7 @@ Votre lien reste le même d'une visite à l'autre dans le même navigateur. « R
 | Identité | ECDSA P-256, créée dans le navigateur, clé privée non exportable (IndexedDB) |
 | Échange de clés | ECDH P-256 éphémère à chaque session, signé par la clé d'identité |
 | Dérivation | HKDF-SHA-256, une clé distincte par sens d'envoi |
-| Messages | AES-256-GCM, compteur strictement croissant |
+| Messages et photos | Découpés en trames de 10 Ko, chacune chiffrée en AES-256-GCM avec un compteur strictement croissant |
 | Code de sécurité | SHA-256 des deux clés d'identité, affiché en 30 chiffres |
 | Transport | Canal de données WebRTC via [PeerJS](https://peerjs.com) 1.5.4 (copie locale dans `vendor/`, licence MIT) |
 
